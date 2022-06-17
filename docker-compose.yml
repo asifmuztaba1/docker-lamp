@@ -1,0 +1,54 @@
+version: "3"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./apache/Dockerfile
+      args:
+        PHP_VERSION: ${PHP_VERSION}
+    container_name: ${DOCKER_NAME_DEV}
+    ports:
+      - ${PORT_WEB}
+    networks:
+      - dockerlamp
+    volumes:
+      - /home/asif/workspace/asif/:/var/www/html
+    links:
+      - mysql
+    restart: always
+
+  mysql:
+    image: ${MYSQL_VERSION}
+    container_name: ${DOCKER_NAME_MYSQL}
+    hostname: mysql
+    ports:
+      - ${PORT_DB}
+    networks:
+      - dockerlamp
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/conf/custom.cnf:/etc/mysql/conf.d/custom.cnf
+      - ./mysql/conf/disable_strict_mode.cnf:/etc/mysql/conf.d/disable_strict_mode.cnf
+
+  phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      container_name: ${DOCKER_NAME_PHPMYADMIN}
+      ports:
+        - ${PORT_PMA}
+      environment:
+        - PMA_HOST=${IP_DB}
+        - UPLOAD_LIMIT=3000M
+      networks:
+        - dockerlamp
+      depends_on:
+        - mysql
+
+volumes:
+  mysql_data:
+
+networks:
+  dockerlamp:
+    external: true
